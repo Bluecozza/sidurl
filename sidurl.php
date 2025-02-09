@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Sidurl
-Description: Plugin Short URL dengan Fitur Lengkap
+Description: Plugin Short URL dengan Fitur Lengkap.
 Version: 1.4
 Author: Nur Muhammad Daim @ Satui.ID
 Text Domain: sidurl
