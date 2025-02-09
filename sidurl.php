@@ -2,7 +2,7 @@
 /*
 Plugin Name: Sidurl
 Description: Plugin Short URL dengan Fitur Lengkap
-Version: 1.1
+Version: 1.4
 Author: Nur Muhammad Daim @ Satui.ID
 Text Domain: sidurl
 */
@@ -253,8 +253,7 @@ function sidurl_check_update() {
     
     wp_die();
 }
-
-///////////
+//////////
 add_action('wp_ajax_sidurl_perform_update', 'sidurl_perform_update');
 
 function sidurl_perform_update() {
@@ -349,12 +348,14 @@ function sidurl_perform_update() {
     wp_die('<p style="color: green;">Plugin berhasil diperbarui!</p>');
 }
 
-/////////////
+/////////
+
 
 function sidurl_sanitize_redirect_type($input) {
     return in_array($input, array('direct', 'interstitial')) ? $input : 'direct';
 }
 
+/////
 function sidurl_settings_page() {
     if (!current_user_can('manage_options')) {
         wp_die(__('Anda tidak memiliki izin untuk mengakses halaman ini', 'sidurl'));
@@ -423,6 +424,8 @@ function sidurl_settings_page() {
 	
     <?php
 }
+
+/////
 
 function sidurl_admin_dashboard() {
     global $wpdb;
