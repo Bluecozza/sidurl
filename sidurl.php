@@ -9,86 +9,8 @@ Text Domain: sidurl
 
 defined('ABSPATH') || exit;
 include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
-define('SIDURL_UPDATE_URL', 'https://raw.githubusercontent.com/Bluecozza/sidurl/refs/heads/main/sidurl.json');
-add_action('wp_ajax_sidurl_check_update', 'sidurl_check_update');
+//define('SIDURL_UPDATE_URL', 'https://raw.githubusercontent.com/Bluecozza/sidurl/refs/heads/main/sidurl.json');
 
-function sidurl_check_update() {
-    if (!current_user_can('manage_options')) {
-        wp_die(__('Akses ditolak', 'sidurl'));
-    }
-
-    $plugin_data = get_plugin_data(__FILE__);
-    $current_version = $plugin_data['Version'];
-
-    $response = wp_remote_get(SIDURL_UPDATE_URL, array('timeout' => 10));
-
-    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-        wp_die('<div class="notice notice-error"><p>Gagal menghubungi server update.</p></div>');
-    }
-
-    $update_info = json_decode(wp_remote_retrieve_body($response), true);
-
-    if (!isset($update_info['version']) || !isset($update_info['download_url'])) {
-        wp_die('<div class="notice notice-error"><p>Data update tidak valid.</p></div>');
-    }
-
-    $latest_version = $update_info['version'];
-    $download_url = $update_info['download_url'];
-
-    if (version_compare($current_version, $latest_version, '<')) {
-        wp_die('<div class="notice notice-warning"><p>Versi baru tersedia: <strong>v' . esc_html($latest_version) . '</strong>.</p>
-            <button id="sidurl-update-now" class="button button-primary">Update Sekarang</button></div>');
-    } else {
-        wp_die('<div class="notice notice-success"><p>Plugin sudah dalam versi terbaru.</p></div>');
-    }
-}
-add_action('wp_ajax_sidurl_perform_update', 'sidurl_perform_update');
-
-function sidurl_perform_update() {
-    if (!current_user_can('manage_options')) {
-        wp_die(__('Akses ditolak', 'sidurl'));
-    }
-
-    $response = wp_remote_get(SIDURL_UPDATE_URL, array('timeout' => 10));
-
-    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-        wp_die('<div class="notice notice-error"><p>Gagal menghubungi server update.</p></div>');
-    }
-
-    $update_info = json_decode(wp_remote_retrieve_body($response), true);
-
-    if (!isset($update_info['download_url'])) {
-        wp_die('<div class="notice notice-error"><p>Data update tidak valid.</p></div>');
-    }
-
-    $download_url = $update_info['download_url'];
-    $tmp_file = download_url($download_url);
-
-    if (is_wp_error($tmp_file)) {
-        wp_die('<div class="notice notice-error"><p>Gagal mengunduh update.</p></div>');
-    }
-
-    // Dapatkan direktori plugin saat ini
-    $plugin_dir = WP_PLUGIN_DIR . '/sidurl';
-
-    // Ekstrak ZIP ke direktori sementara
-    $zip = new ZipArchive;
-    if ($zip->open($tmp_file) === true) {
-        $zip->extractTo(WP_PLUGIN_DIR);
-        $zip->close();
-    } else {
-        unlink($tmp_file);
-        wp_die('<div class="notice notice-error"><p>Gagal mengekstrak file update.</p></div>');
-    }
-
-    unlink($tmp_file);
-
-    // Aktifkan ulang plugin
-    deactivate_plugins('sidurl/sidurl.php');
-    activate_plugin('sidurl/sidurl.php');
-
-    wp_die('<div class="notice notice-success"><p>Update berhasil! Silakan refresh halaman.</p></div>');
-}
 
 
 // ==============================================
@@ -252,6 +174,144 @@ function sidurl_register_settings() {
         )
     );
 }
+
+add_action('admin_menu', 'sidurl_add_update_menu');
+
+function sidurl_add_update_menu() {
+    add_submenu_page(
+        'options-general.php', 
+        'SidURL Update', 
+        'SidURL Update', 
+        'manage_options', 
+        'sidurl-update', 
+        'sidurl_update_page'
+    );
+}
+
+function sidurl_update_page() {
+    ?>
+    <div class="wrap">
+        <h1>SidURL Update</h1>
+        <p>Periksa apakah ada pembaruan terbaru.</p>
+        <button id="sidurl-check-update" class="button button-primary">Cek Update</button>
+        <div id="sidurl-update-result"></div>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        $('#sidurl-check-update').click(function() {
+            $(this).prop('disabled', true).text('Mengecek...');
+            $.post(ajaxurl, { action: 'sidurl_check_update' }, function(response) {
+                $('#sidurl-update-result').html(response);
+                $('#sidurl-check-update').prop('disabled', false).text('Cek Update');
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action('wp_ajax_sidurl_check_update', 'sidurl_check_update');
+
+function sidurl_check_update() {
+    $repo_owner = 'Bluecozza';
+    $repo_name  = 'sidurl';
+
+    $api_url = "https://api.github.com/repos/{$repo_owner}/{$repo_name}/releases/latest";
+    $response = wp_remote_get($api_url, ['timeout' => 10, 'user-agent' => 'WordPress']);
+
+    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+        wp_die('<p style="color: red;">Gagal memeriksa update.</p>');
+    }
+
+    $release_data = json_decode(wp_remote_retrieve_body($response), true);
+    $latest_version = $release_data['tag_name'];
+    $download_url = $release_data['zipball_url'];
+
+    // Ambil versi saat ini dari plugin
+    $plugin_data = get_plugin_data(WP_PLUGIN_DIR . '/sidurl/sidurl.php');
+    $current_version = $plugin_data['Version'];
+
+    if (version_compare($latest_version, $current_version, '>')) {
+        echo "<p>Versi terbaru tersedia: <strong>{$latest_version}</strong></p>";
+        echo "<button id='sidurl-update' class='button button-primary' data-url='{$download_url}'>Update Sekarang</button>";
+
+        ?>
+        <script>
+        jQuery(document).ready(function($) {
+            $('#sidurl-update').click(function() {
+                var downloadUrl = $(this).data('url');
+                $(this).prop('disabled', true).text('Mengupdate...');
+                $.post(ajaxurl, { action: 'sidurl_perform_update', url: downloadUrl }, function(response) {
+                    $('#sidurl-update-result').html(response);
+                });
+            });
+        });
+        </script>
+        <?php
+    } else {
+        echo "<p>Anda sudah menggunakan versi terbaru ({$current_version}).</p>";
+    }
+    
+    wp_die();
+}
+add_action('wp_ajax_sidurl_perform_update', 'sidurl_perform_update');
+
+function sidurl_perform_update() {
+    if (!current_user_can('manage_options')) {
+        wp_die('<p style="color: red;">Akses ditolak.</p>');
+    }
+
+    include_once(ABSPATH . 'wp-admin/includes/file.php');
+    include_once(ABSPATH . 'wp-admin/includes/misc.php');
+    include_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
+    include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+
+    global $wp_filesystem;
+
+    // Inisialisasi filesystem
+    if (!WP_Filesystem()) {
+        wp_die('<p style="color: red;">Gagal menginisialisasi filesystem.</p>');
+    }
+
+    $download_url = esc_url_raw($_POST['url']);
+    $tmp_file = download_url($download_url);
+
+    if (is_wp_error($tmp_file)) {
+        wp_die('<p style="color: red;">Gagal mengunduh file update.</p>');
+    }
+
+    $plugin_slug = 'sidurl';
+    $plugin_dir = WP_PLUGIN_DIR . '/' . $plugin_slug;
+
+    // Matikan plugin sebelum menghapus
+    deactivate_plugins($plugin_slug . '/' . $plugin_slug . '.php');
+
+    // Hapus plugin lama
+    if ($wp_filesystem->exists($plugin_dir)) {
+        $delete_result = $wp_filesystem->delete($plugin_dir, true);
+        if (!$delete_result) {
+            wp_die('<p style="color: red;">Gagal menghapus plugin lama.</p>');
+        }
+    }
+
+    // Ekstrak ZIP ke folder plugin
+    $unzip_result = unzip_file($tmp_file, WP_PLUGIN_DIR);
+    unlink($tmp_file); // Hapus ZIP setelah ekstraksi
+
+    if (is_wp_error($unzip_result)) {
+        wp_die('<p style="color: red;">Gagal mengekstrak file update.</p>');
+    }
+
+    // Aktifkan kembali plugin
+    $activate_result = activate_plugin($plugin_slug . '/' . $plugin_slug . '.php');
+
+    if (is_wp_error($activate_result)) {
+        wp_die('<p style="color: orange;">Plugin diperbarui tetapi gagal diaktifkan. Silakan aktifkan manual.</p>');
+    }
+
+    wp_die('<p style="color: green;">Plugin berhasil diperbarui!</p>');
+}
+
+
 
 function sidurl_sanitize_redirect_type($input) {
     return in_array($input, array('direct', 'interstitial')) ? $input : 'direct';
