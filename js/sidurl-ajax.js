@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .on('success', function(e) {
                         e.trigger.textContent = sidurl_data.i18n.copied;
                         setTimeout(() => {
-                            e.trigger.textContent = 'Copy';
+                            e.trigger.textContent = `Copy`;
                         }, 2000);
                     });
             } else {
