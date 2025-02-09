@@ -2,7 +2,7 @@
 /*
 Plugin Name: Sidurl
 Description: Plugin Short URL dengan Fitur Lengkap
-Version: 2.3
+Version: 1.2
 Author: Nur Muhammad Daim @ Satui.ID
 Text Domain: sidurl
 */
