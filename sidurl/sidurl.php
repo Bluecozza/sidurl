@@ -9,8 +9,7 @@ Text Domain: sidurl
 
 defined('ABSPATH') || exit;
 include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
-define('SIDURL_UPDATE_URL', 'https://github.com/Bluecozza/sidurl/sidurl.json');
-
+define('SIDURL_UPDATE_URL', 'https://raw.githubusercontent.com/Bluecozza/sidurl/refs/heads/main/sidurl.json');
 add_action('wp_ajax_sidurl_check_update', 'sidurl_check_update');
 
 function sidurl_check_update() {
