@@ -2,7 +2,7 @@
 /*
 Plugin Name: Sidurl
 Description: Plugin Short URL dengan Fitur Lengkap
-Version: 1.4
+Version: 1.1
 Author: Nur Muhammad Daim @ Satui.ID
 Text Domain: sidurl
 */
@@ -253,6 +253,8 @@ function sidurl_check_update() {
     
     wp_die();
 }
+
+///////////
 add_action('wp_ajax_sidurl_perform_update', 'sidurl_perform_update');
 
 function sidurl_perform_update() {
@@ -286,7 +288,7 @@ function sidurl_perform_update() {
     // Matikan plugin sebelum update
     deactivate_plugins($plugin_slug . '/' . $plugin_slug . '.php');
 
-    // Pastikan folder sementara kosong sebelum ekstraksi
+    // Hapus folder sementara jika ada
     if ($wp_filesystem->exists($tmp_extract_dir)) {
         $wp_filesystem->delete($tmp_extract_dir, true);
     }
@@ -299,8 +301,10 @@ function sidurl_perform_update() {
         wp_die('<p style="color: red;">Gagal mengekstrak file update.</p>');
     }
 
-    // Cek nama folder hasil ekstraksi (biasanya ada di dalam $tmp_extract_dir)
+    // Cari folder hasil ekstraksi (biasanya nama acak seperti "sidurl-latest")
     $extracted_folders = scandir($tmp_extract_dir);
+    $new_plugin_dir = '';
+
     foreach ($extracted_folders as $folder) {
         if ($folder !== '.' && $folder !== '..') {
             $new_plugin_dir = $tmp_extract_dir . '/' . $folder;
@@ -308,7 +312,7 @@ function sidurl_perform_update() {
         }
     }
 
-    if (!isset($new_plugin_dir) || !$wp_filesystem->exists($new_plugin_dir)) {
+    if (!$new_plugin_dir || !$wp_filesystem->exists($new_plugin_dir)) {
         wp_die('<p style="color: red;">Gagal menemukan folder plugin yang diekstrak.</p>');
     }
 
@@ -317,23 +321,35 @@ function sidurl_perform_update() {
         $wp_filesystem->delete($plugin_dir, true);
     }
 
-    // Pindahkan folder hasil ekstraksi ke `sidurl`
+    // Pindahkan isi folder hasil ekstraksi ke `sidurl/`
     $move_result = rename($new_plugin_dir, $plugin_dir);
+
+    if (!$move_result) {
+        // Jika gagal rename, coba pindahkan isinya satu per satu
+        $files = scandir($new_plugin_dir);
+        foreach ($files as $file) {
+            if ($file !== '.' && $file !== '..') {
+                $wp_filesystem->move($new_plugin_dir . '/' . $file, $plugin_dir . '/' . $file, true);
+            }
+        }
+    }
 
     // Hapus folder sementara jika masih ada
     if ($wp_filesystem->exists($tmp_extract_dir)) {
         $wp_filesystem->delete($tmp_extract_dir, true);
     }
 
-    if (!$move_result) {
-        wp_die('<p style="color: red;">Gagal memindahkan plugin baru.</p>');
-    }
-
     // Aktifkan ulang plugin
     $activate_result = activate_plugin($plugin_slug . '/' . $plugin_slug . '.php');
 
-    if (is_wp_error($activate_result))
+    if (is_wp_error($activate_result)) {
+        wp_die('<p style="color: orange;">Plugin diperbarui tetapi gagal diaktifkan. Silakan aktifkan manual.</p>');
+    }
 
+    wp_die('<p style="color: green;">Plugin berhasil diperbarui!</p>');
+}
+
+/////////////
 
 function sidurl_sanitize_redirect_type($input) {
     return in_array($input, array('direct', 'interstitial')) ? $input : 'direct';
