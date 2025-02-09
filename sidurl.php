@@ -2,16 +2,13 @@
 /*
 Plugin Name: Sidurl
 Description: Plugin Short URL dengan Fitur Lengkap.
-Version: 1.4
+Version: 1.5
 Author: Nur Muhammad Daim @ Satui.ID
 Text Domain: sidurl
 */
 
 defined('ABSPATH') || exit;
 include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
-//define('SIDURL_UPDATE_URL', 'https://raw.githubusercontent.com/Bluecozza/sidurl/refs/heads/main/sidurl.json');
-
-
 
 // ==============================================
 // KONEKSI DATABASE & SETUP AWAL
@@ -30,7 +27,7 @@ function sidurl_deactivate_plugin() {
 }
 
 // ==============================================
-// FUNGSI DATABASE
+// DATABASE
 // ==============================================
 function sidurl_check_database_table() {
     global $wpdb;
@@ -53,11 +50,8 @@ function sidurl_create_database_table() {
         UNIQUE KEY short_code (short_code),
         KEY long_url (long_url(191))
     ) $charset_collate;";
-
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta($sql);
-
-    
     return true;
 }
 
@@ -79,9 +73,7 @@ function sidurl_add_query_vars($vars) {
 function sidurl_handle_redirect() {
     try {
         global $wpdb;
-        
 
-		
         $short_code = get_query_var('sidurl_redirect');
 		if (empty($short_code)) return;
         if (!$short_code) {
@@ -253,7 +245,9 @@ function sidurl_check_update() {
     
     wp_die();
 }
-//////////
+// ==============================================
+// PROCESS UPDATE
+// ==============================================
 add_action('wp_ajax_sidurl_perform_update', 'sidurl_perform_update');
 
 function sidurl_perform_update() {
@@ -348,7 +342,7 @@ function sidurl_perform_update() {
     wp_die('<p style="color: green;">Plugin berhasil diperbarui!</p>');
 }
 
-/////////
+////
 
 
 function sidurl_sanitize_redirect_type($input) {

@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                    readonly>
                             <button class="copy-button" 
                                     data-clipboard-target="#shorturl-output">
-                                ${sidurl_data.i18n.copy}
+                                Copy
                             </button>
                         </div>
                     </div>
