@@ -1,4 +1,4 @@
-# sidurl
+# sidurl (Short ID Url)
 Simple, Quick, and Secure Short URL plugin for Wordpress. Visitor can make shorturl just like bitly or any other services
 
 HOW TO
