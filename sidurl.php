@@ -8,7 +8,6 @@ Text Domain: sidurl
 */
 
 defined('ABSPATH') || exit;
-//include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
 include_once plugin_dir_path(__FILE__) . 'includes/admin-modules.php';
 include_once plugin_dir_path(__FILE__) . 'includes/loader.php';
 
@@ -356,14 +355,8 @@ function sidurl_perform_update() {
     wp_die('<p style="color: green;">Plugin berhasil diperbarui!</p>');
 }
 
-////
 
 
-function sidurl_sanitize_redirect_type($input) {
-    return in_array($input, array('direct', 'interstitial')) ? $input : 'direct';
-}
-
-/////
 function sidurl_settings_page() {
     if (!current_user_can('manage_options')) {
         wp_die(__('Anda tidak memiliki izin untuk mengakses halaman ini', 'sidurl'));
@@ -374,33 +367,7 @@ function sidurl_settings_page() {
     <div class="wrap">
         <h1><?php _e('Pengaturan Sidurl', 'sidurl'); ?></h1>
         
-        <form method="post" action="options.php">
-            <?php 
-            settings_fields('sidurl_settings_group');
-            do_settings_sections('sidurl_settings_group');
-            $current_type = get_option('sidurl_redirect_type', 'direct');
-            ?>
-            <table class="form-table">
-                <tr>
-                    <th scope="row"><?php _e('Tipe Redirect', 'sidurl'); ?></th>
-                    <td>
-                        <fieldset>
-                            <label>
-                                <input type="radio" name="sidurl_redirect_type" 
-                                    value="direct" <?php checked($current_type, 'direct'); ?>>
-                                <?php _e('Direct Redirect', 'sidurl'); ?>
-                            </label><br>
-                            <label>
-                                <input type="radio" name="sidurl_redirect_type" 
-                                    value="interstitial" <?php checked($current_type, 'interstitial'); ?>>
-                                <?php _e('Interstitial Page', 'sidurl'); ?>
-                            </label>
-                        </fieldset>
-                    </td>
-                </tr>
-            </table>
-            <?php submit_button(__('Simpan Pengaturan', 'sidurl')); ?>
-        </form>
+
 		        <h2><?php _e('Cek & Update Plugin', 'sidurl'); ?></h2>
         <button id="sidurl-check-update" class="button button-secondary">
             <?php _e('Cek Update', 'sidurl'); ?>
