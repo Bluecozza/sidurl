@@ -193,40 +193,6 @@ function sidurl_register_settings() {
     );
 }
 
-add_action('admin_menu', 'sidurl_add_update_menu');
-
-function sidurl_add_update_menu() {
-    add_submenu_page(
-        'options-general.php', 
-        'SidURL Update', 
-        'SidURL Update', 
-        'manage_options', 
-        'sidurl-update', 
-        'sidurl_update_page'
-    );
-}
-
-function sidurl_update_page() {
-    ?>
-    <div class="wrap">
-        <h1>SidURL Update</h1>
-        <p>Periksa apakah ada pembaruan terbaru.</p>
-        <button id="sidurl-check-update" class="button button-primary">Cek Update</button>
-        <div id="sidurl-update-result"></div>
-    </div>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#sidurl-check-update').click(function() {
-            $(this).prop('disabled', true).text('Mengecek...');
-            $.post(ajaxurl, { action: 'sidurl_check_update' }, function(response) {
-                $('#sidurl-update-result').html(response);
-                $('#sidurl-check-update').prop('disabled', false).text('Cek Update');
-            });
-        });
-    });
-    </script>
-    <?php
-}
 add_action('wp_ajax_sidurl_check_update', 'sidurl_check_update');
 
 function sidurl_check_update() {
