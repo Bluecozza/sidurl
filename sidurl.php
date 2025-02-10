@@ -9,6 +9,7 @@ Text Domain: sidurl
 
 defined('ABSPATH') || exit;
 include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
+include_once plugin_dir_path(__FILE__) . 'includes/admin-modules.php';
 
 // ==============================================
 // KONEKSI DATABASE & SETUP AWAL
@@ -170,7 +171,14 @@ function sidurl_admin_menu() {
         'dashicons-admin-links',
         80
     );
-
+	add_submenu_page(
+        'sidurl',
+        'Modules',
+        'Modules',
+        'manage_options',
+        'sidurl-modules',
+        'sidurl_modules_page'
+    );
     add_submenu_page(
         'sidurl',
         __('Settings', 'sidurl'),
@@ -179,6 +187,8 @@ function sidurl_admin_menu() {
         'sidurl-settings',
         'sidurl_settings_page'
     );
+	
+
 }
 
 function sidurl_register_settings() {
