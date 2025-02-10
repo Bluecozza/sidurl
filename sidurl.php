@@ -43,7 +43,7 @@ function sidurl_create_database_table() {
     $sql = "CREATE TABLE $table_name (
         id mediumint(9) UNSIGNED NOT NULL AUTO_INCREMENT,
         long_url text NOT NULL,
-        $short_code varchar(6) NOT NULL,
+        short_code varchar(6) NOT NULL,
         clicks mediumint(9) UNSIGNED NOT NULL DEFAULT 0,
         created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
@@ -53,6 +53,32 @@ function sidurl_create_database_table() {
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta($sql);
     return true;
+}
+
+function sidurl_handle_recreate_table() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Akses Ditolak');
+    }
+
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . 'sidurl';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+        long_url text NOT NULL,
+        short_code varchar(6) NOT NULL,
+        clicks mediumint(9) UNSIGNED NOT NULL DEFAULT 0,
+        created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY short_code (short_code),
+        KEY long_url (long_url(191))
+    ) $charset_collate;";
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta($sql);
+    wp_redirect(admin_url('admin.php?page=sidurl'));
+    exit;
 }
 
 // ==============================================
