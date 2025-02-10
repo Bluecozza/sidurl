@@ -8,8 +8,9 @@ Text Domain: sidurl
 */
 
 defined('ABSPATH') || exit;
-include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
+//include_once plugin_dir_path(__FILE__) . 'includes/interstitial.php';
 include_once plugin_dir_path(__FILE__) . 'includes/admin-modules.php';
+include_once plugin_dir_path(__FILE__) . 'includes/loader.php';
 
 // ==============================================
 // KONEKSI DATABASE & SETUP AWAL
@@ -129,16 +130,14 @@ function sidurl_handle_redirect() {
             array('id' => $result->id)
         );
 
-        // Handle redirect type
-        $redirect_type = get_option('sidurl_redirect_type', 'direct');
+        // Default redirect behavior
+        $url = esc_url_raw($result->long_url);
         
-        if ($redirect_type === 'interstitial') {
-            sidurl_show_interstitial_page($result->long_url);
-            exit;
-        }
-
-        // Redirect langsung
-        wp_redirect(esc_url_raw($result->long_url));
+        // Cek apakah ada modul redirect aktif
+        $url = apply_filters('sidurl_redirect_handler', $url, $result);
+        
+        // Jika tidak ada modul yang memproses, lakukan direct redirect
+        wp_redirect($url, 302);
         exit;
 
     } catch (Exception $e) {
@@ -157,11 +156,12 @@ function sidurl_handle_redirect() {
 // ==============================================
 // ADMIN DASHBOARD
 // ==============================================
-add_action('admin_menu', 'sidurl_admin_menu');
+add_action('admin_menu', 'sidurl_admin_menu', 9); // Priority 9 (lebih awal)
 add_action('admin_post_sidurl_recreate_table', 'sidurl_handle_recreate_table');
 add_action('admin_init', 'sidurl_register_settings');
 
 function sidurl_admin_menu() {
+    // Menu Utama Sidurl
     add_menu_page(
         'Sidurl',
         'Sidurl',
@@ -171,24 +171,36 @@ function sidurl_admin_menu() {
         'dashicons-admin-links',
         80
     );
-	add_submenu_page(
-        'sidurl',
+
+    // Submenu "Modules"
+    add_submenu_page(
+        'sidurl',  // Parent: menu utama Sidurl
         'Modules',
         'Modules',
         'manage_options',
         'sidurl-modules',
         'sidurl_modules_page'
     );
+
+    // Submenu "Settings"
     add_submenu_page(
-        'sidurl',
+        'sidurl',  // Parent: menu utama Sidurl
         __('Settings', 'sidurl'),
         __('Settings', 'sidurl'),
         'manage_options',
         'sidurl-settings',
         'sidurl_settings_page'
     );
-	
 
+}
+// Halaman dashboard SidURL
+function sidurl_dashboard_page() {
+    ?>
+    <div class="wrap">
+        <h1>SidURL Dashboard</h1>
+        <p>Selamat datang di SidURL. Pilih menu di samping untuk mengelola fitur.</p>
+    </div>
+    <?php
 }
 
 function sidurl_register_settings() {

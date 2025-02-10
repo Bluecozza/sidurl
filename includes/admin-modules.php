@@ -1,7 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
 
-// Tambahkan menu di dashboard
 
 
 // Halaman pengaturan modul
@@ -21,7 +20,7 @@ function sidurl_modules_page()
 
     ?>
     <div class="wrap">
-        <h1>Modules and Plugin</h1>
+        <h1>SidURL Modules</h1>
         <form method="post">
             <?php wp_nonce_field('sidurl_save_modules'); ?>
             <?php foreach ($existing_modules as $module) : ?>
